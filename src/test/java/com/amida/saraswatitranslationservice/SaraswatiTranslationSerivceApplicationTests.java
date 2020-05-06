@@ -35,7 +35,7 @@ class SaraswatiTranslationSerivceApplicationTests {
 
 		URL resource2 = classLoader.getResource(fmlOutPutLocation);
 		File fmlOutPutLocationData = new File(resource2.getFile());
-		try (InputStream inputStream = classLoader.getResourceAsStream("xml/data.xml")) {
+		try (InputStream inputStream = classLoader.getResourceAsStream(fmlOutPutLocation)) {
 
 			String fmlOutPutLocationStream = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
 		} catch (IOException e) {
@@ -44,7 +44,7 @@ class SaraswatiTranslationSerivceApplicationTests {
 
 		URL resource3 = classLoader.getResource(fmlMapLocation);
 		File fmlMapLocationData = new File(resource3.getFile());
-		try (InputStream inputStream = classLoader.getResourceAsStream("xml/data.xml")) {
+		try (InputStream inputStream = classLoader.getResourceAsStream(fmlMapLocation)) {
 
 			String fmlMapLocationStream = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
 		} catch (IOException e) {

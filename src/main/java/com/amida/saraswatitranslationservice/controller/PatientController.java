@@ -8,7 +8,6 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
-import org.hl7.fhir.dstu3.model.Patient;
 import org.hl7.fhir.r5.context.SimpleWorkerContext;
 import org.hl7.fhir.r5.elementmodel.Element;
 import org.hl7.fhir.r5.elementmodel.Manager;
@@ -48,6 +47,8 @@ public class PatientController {
 
 	@Value("${conversion.outputVersion}")
 	private String outputVersion;
+	
+	//Still need to figure out a way to set the mapping name to a variable.
 
 	@GetMapping(path = "/patient")
 	public @ResponseBody ResponseEntity<?> patientResponse(@RequestBody byte[] request) {
@@ -83,6 +84,10 @@ public class PatientController {
 				Element e = Manager.parse(context, new ByteArrayInputStream(content.focus), content.cntType);
 				Manager.compose(context, e, new FileOutputStream(output),
 						(output.endsWith(".json") ? FhirFormat.JSON : FhirFormat.XML), OutputStyle.PRETTY, null);
+				//Need to do a file read in here as of now.
+				String readPath = output;
+				
+			
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

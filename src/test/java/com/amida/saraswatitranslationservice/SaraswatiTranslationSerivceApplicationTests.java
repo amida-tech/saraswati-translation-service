@@ -7,6 +7,9 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.io.IOUtils;
+import org.hl7.fhir.r4.context.IWorkerContext;
+import org.hl7.fhir.r4.context.BaseWorkerContext;
+import org.hl7.fhir.r4.utils.StructureMapUtilities;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -23,6 +26,8 @@ class SaraswatiTranslationSerivceApplicationTests {
 		String fmlInfoSource = "ca.uhn.hapi.fhir:hapi-fhir-validation-resources-r4:3.8.0";
 
 		ClassLoader classLoader = getClass().getClassLoader();
+		
+		
 
 		URL resource1 = classLoader.getResource(fmlTestSourceLocation);
 		File fmlTestSourceData = new File(resource1.getFile());
@@ -50,5 +55,6 @@ class SaraswatiTranslationSerivceApplicationTests {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		
 	}
 }

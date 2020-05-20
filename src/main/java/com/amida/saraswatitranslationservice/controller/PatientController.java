@@ -2,6 +2,7 @@ package com.amida.saraswatitranslationservice.controller;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -21,6 +22,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.StreamUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -53,10 +55,10 @@ public class PatientController {
 	@GetMapping(path = "/patient")
 	public @ResponseBody ResponseEntity<?> patientResponse(@RequestBody byte[] request) {
 		ApiResponse apiResponse = new ApiResponse();
-		ByteArrayOutputStream returnOutput = new ByteArrayOutputStream();
 
 		if (conversionStatus) {
 			// Build the CLI command here out of our variables
+			FileInputStream fileOutput = null;
 			Params params = new Params();
 			String[] args = { " -version" + inputVersion, " -to-version" + outputVersion, "" };
 			Content content = new Content();
@@ -85,7 +87,7 @@ public class PatientController {
 				Manager.compose(context, e, new FileOutputStream(output),
 						(output.endsWith(".json") ? FhirFormat.JSON : FhirFormat.XML), OutputStyle.PRETTY, null);
 				//Need to do a file read in here as of now.
-				String readPath = output;
+				fileOutput = new FileInputStream(output);
 				
 			
 			} catch (Exception e) {
@@ -93,7 +95,7 @@ public class PatientController {
 				e.printStackTrace();
 			}
 
-			return new ResponseEntity<>(returnOutput, HttpStatus.OK);
+			return new ResponseEntity<>(fileOutput, HttpStatus.OK);
 		} else if (transformStatus) {
 			apiResponse.setResponseText("This feature is not yet implemented");
 			return new ResponseEntity<>(apiResponse, HttpStatus.NOT_IMPLEMENTED);

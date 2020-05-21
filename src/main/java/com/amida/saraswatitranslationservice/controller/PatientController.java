@@ -17,6 +17,7 @@ import org.hl7.fhir.r5.elementmodel.Element;
 import org.hl7.fhir.r5.elementmodel.Manager;
 import org.hl7.fhir.r5.elementmodel.Manager.FhirFormat;
 import org.hl7.fhir.r5.formats.IParser.OutputStyle;
+import org.hl7.fhir.utilities.cache.NpmPackage;
 import org.hl7.fhir.validation.ValidationEngine;
 import org.hl7.fhir.validation.cli.model.CliContext;
 import org.hl7.fhir.validation.cli.services.ValidationService;
@@ -52,63 +53,54 @@ public class PatientController {
 
 	@Value("${conversion.outputVersion}")
 	private String outputVersion;
-	
-	//Still need to figure out a way to set the mapping name to a variable.
+
+	// Still need to figure out a way to set the mapping name to a variable.
 
 	@GetMapping(path = "/patient")
 	public @ResponseBody ResponseEntity<?> patientResponse(@RequestBody String directory) {
 		ApiResponse apiResponse = new ApiResponse();
 		byte[] request = null;
 		FileInputStream requestInput;
+		// Reads file off of file system to turn it into byte-stream. Will be moved to a
+		// development mode flag operation at some point.
 		try {
 			requestInput = new FileInputStream(directory);
 			try {
 				request = IOUtils.toByteArray(requestInput);
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		} catch (FileNotFoundException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 
-
 		if (conversionStatus) {
-			// Build the CLI command here out of our variables
 			FileInputStream fileOutput = null;
-			Params params = new Params();
-			String[] args = { " -version" + inputVersion, " -to-version" + outputVersion, "" };
+//			Params params = new Params();
+			
+			//Generate a file name for the output made of date signatures
+			String strDate = Calendar.getInstance().getTime().toString();
+			String output = "./temp/" + directory +strDate + ".json";
+//			String[] args = { " -version" + inputVersion, " -to-version" + outputVersion, " -output" + output };
 			Content content = new Content();
 			content.cntType = FhirFormat.JSON;
 			content.focus = request;
 
 			try {
-				CliContext cliContext = params.loadCliContext(args);
-				SimpleWorkerContext context = new SimpleWorkerContext();
-				String definitions = "C:\\hl7.fhir.r3.core#3.0.2";
-				ValidationEngine validator = ValidationService.getValidator(cliContext, definitions);
+//				CliContext cliContext = params.loadCliContext(args);
+				String definitions = "hl7.fhir.r3.core#3.0.2";
+				// see SimpleWorkerContext 143 for instructions
+				
+				//Trying to build the Context here from NPM package.
+				NpmPackage pi = NpmPackage.();
+				
+				SimpleWorkerContext context = SimpleWorkerContext.fromPackage(pi);
 
-				// Need to set up context to equal something, which is different than CLI
-				// context. It contains all of the information about what operation is being
-				// performed, and what version is being written to. Gotta dig that out.
-
-				Date date = Calendar.getInstance().getTime();
-				DateFormat dateFormat = new SimpleDateFormat("yyyy-mm-dd hh:mm:ss");
-				String strDate = dateFormat.format(date);
-				String output = "./temp/" + strDate + ".json";
-
-				// output needs to be rectified into something returnable. Currently it's a
-				// string representing a filepath destination. Theoretically this could be used
-				// then turned into a file read as the return. Currently returning empty
-				// byteArrayStream.
 				Element e = Manager.parse(context, new ByteArrayInputStream(content.focus), content.cntType);
 				Manager.compose(context, e, new FileOutputStream(output),
 						(output.endsWith(".json") ? FhirFormat.JSON : FhirFormat.XML), OutputStyle.PRETTY, null);
-				//Need to do a file read in here as of now.
 				fileOutput = new FileInputStream(output);
-				
-			
+
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

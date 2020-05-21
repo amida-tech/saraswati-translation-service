@@ -3,12 +3,15 @@ package com.amida.saraswatitranslationservice.controller;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
+import org.apache.commons.io.IOUtils;
 import org.hl7.fhir.r5.context.SimpleWorkerContext;
 import org.hl7.fhir.r5.elementmodel.Element;
 import org.hl7.fhir.r5.elementmodel.Manager;
@@ -53,8 +56,23 @@ public class PatientController {
 	//Still need to figure out a way to set the mapping name to a variable.
 
 	@GetMapping(path = "/patient")
-	public @ResponseBody ResponseEntity<?> patientResponse(@RequestBody byte[] request) {
+	public @ResponseBody ResponseEntity<?> patientResponse(@RequestBody String directory) {
 		ApiResponse apiResponse = new ApiResponse();
+		byte[] request = null;
+		FileInputStream requestInput;
+		try {
+			requestInput = new FileInputStream(directory);
+			try {
+				request = IOUtils.toByteArray(requestInput);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		} catch (FileNotFoundException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+
 
 		if (conversionStatus) {
 			// Build the CLI command here out of our variables
@@ -68,7 +86,8 @@ public class PatientController {
 			try {
 				CliContext cliContext = params.loadCliContext(args);
 				SimpleWorkerContext context = new SimpleWorkerContext();
-				ValidationEngine validator = ValidationService.getValidator(cliContext, null);
+				String definitions = "C:\\hl7.fhir.r3.core#3.0.2";
+				ValidationEngine validator = ValidationService.getValidator(cliContext, definitions);
 
 				// Need to set up context to equal something, which is different than CLI
 				// context. It contains all of the information about what operation is being

@@ -2,6 +2,7 @@ package com.amida.saraswatitranslationservice.controller;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -18,6 +19,7 @@ import org.hl7.fhir.r5.elementmodel.Manager;
 import org.hl7.fhir.r5.elementmodel.Manager.FhirFormat;
 import org.hl7.fhir.r5.formats.IParser.OutputStyle;
 import org.hl7.fhir.utilities.cache.NpmPackage;
+import org.hl7.fhir.utilities.cache.PackageCacheManager;
 import org.hl7.fhir.validation.ValidationEngine;
 import org.hl7.fhir.validation.cli.model.CliContext;
 import org.hl7.fhir.validation.cli.services.ValidationService;
@@ -65,8 +67,10 @@ public class PatientController {
 		// development mode flag operation at some point.
 		try {
 			requestInput = new FileInputStream(directory);
+			System.out.println(">>>> Step 1: read input file");
 			try {
 				request = IOUtils.toByteArray(requestInput);
+				System.out.println(">>>> Step 2: turn input into byte[]");
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -75,36 +79,76 @@ public class PatientController {
 		}
 
 		if (conversionStatus) {
+			System.out.println(">>>> Step 3: Converter");
 			FileInputStream fileOutput = null;
-//			Params params = new Params();
+			Params params = new Params();
 			
 			//Generate a file name for the output made of date signatures
-			String strDate = Calendar.getInstance().getTime().toString();
-			String output = "./temp/" + directory +strDate + ".json";
-//			String[] args = { " -version" + inputVersion, " -to-version" + outputVersion, " -output" + output };
+			Long strDate = Calendar.getInstance().getTimeInMillis();
+			String output = ".\\temp\\" + strDate + ".json";
+			String[] args = { directory + " -version" + inputVersion, " -to-version" + outputVersion, " -output" + output };
+			String resourcePath = "\\temp\\";
+			String definitions = "hl7.fhir.r3.core#3.0.2";
+			String path = resourcePath+definitions;
+			CliContext cliContext;
+			PackageCacheManager packageCacheManager;
+			System.out.println(">>>> Step 3-1: Declare Strings");
+			System.out.println(">>>>|>>>> 1 output: " + output);
+			System.out.println(">>>>|>>>> 2 args: " + args.toString());
+			System.out.println(">>>>|>>>> 3 path: " + path);
+			
 			Content content = new Content();
 			content.cntType = FhirFormat.JSON;
 			content.focus = request;
-
+			
+			
 			try {
+				cliContext = Params.loadCliContext(args);
+				cliContext.setSv(inputVersion);
+				System.out.println(">>>> Step 3-2: cliContext Loaded");
+				try {
+					packageCacheManager = new PackageCacheManager(true, 3);
+					System.out.println(">>>> Step 3-3: packageCacheManager Loaded");
+					try {
+						ValidationEngine validator = ValidationService.getValidator(cliContext, path);
+						System.out.println(">>>> Step 3-4: validator Loaded");
+						ValidationService.convertSources(cliContext, validator);
+						System.out.println(">>>> Step 3-5: Conversion Loaded");
+					} catch (IOException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+				} catch (IOException e2) {
+					// TODO Auto-generated catch block
+					e2.printStackTrace();
+				}
+			} catch (Exception e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+
+			
+
+			
+
+//			try {
 //				CliContext cliContext = params.loadCliContext(args);
-				String definitions = "hl7.fhir.r3.core#3.0.2";
+
 				// see SimpleWorkerContext 143 for instructions
 				
 				//Trying to build the Context here from NPM package.
-				NpmPackage pi = NpmPackage.();
-				
-				SimpleWorkerContext context = SimpleWorkerContext.fromPackage(pi);
-
-				Element e = Manager.parse(context, new ByteArrayInputStream(content.focus), content.cntType);
-				Manager.compose(context, e, new FileOutputStream(output),
-						(output.endsWith(".json") ? FhirFormat.JSON : FhirFormat.XML), OutputStyle.PRETTY, null);
-				fileOutput = new FileInputStream(output);
-
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+//				NpmPackage pi = NpmPackage.();
+//				SimpleWorkerContext context = SimpleWorkerContext.fromPack(path);
+//				
+//				Element e = Manager.parse(context, new ByteArrayInputStream(content.focus), content.cntType);
+//				Manager.compose(context, e, new FileOutputStream(output),
+//						(output.endsWith(".json") ? FhirFormat.JSON : FhirFormat.XML), OutputStyle.PRETTY, null);
+//				fileOutput = new FileInputStream(output);
+//
+//			} catch (Exception e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
 
 			return new ResponseEntity<>(fileOutput, HttpStatus.OK);
 		} else if (transformStatus) {

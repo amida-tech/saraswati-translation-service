@@ -101,7 +101,6 @@ public class PatientController {
 			content.cntType = FhirFormat.JSON;
 			content.focus = request;
 			
-			
 			try {
 				cliContext = Params.loadCliContext(args);
 				cliContext.setSv(inputVersion);
@@ -126,10 +125,6 @@ public class PatientController {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
-
-			
-
-			
 
 //			try {
 //				CliContext cliContext = params.loadCliContext(args);
